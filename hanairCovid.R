@@ -57,11 +57,11 @@ tsn_met <- importNOAA(code = "489000-99999", year = 2016:2020)
 # Require Hysplit software installed
 # Add function
 getMet <- function (year = 2016:2020, month = 1:12, path_met = "D:/GitHub/hanair/TrajData/")
-{
-  for (i in seq_along(year))
   {
-    for (j in seq_along(month))
+  for (i in seq_along(year))
     {
+    for (j in seq_along(month))
+      {
       download.file(url = paste0("ftp://arlftp.arlhq.noaa.gov/archives/reanalysis/RP",
                                  year[i],
                                  sprintf("%02d", month[j]),
@@ -72,21 +72,21 @@ getMet <- function (year = 2016:2020, month = 1:12, path_met = "D:/GitHub/hanair
                                       sprintf("%02d", month[j]),
                                       ".gbl"),
                     mode = "wb")
+      }
     }
   }
-}
 
 read.files <- function(hours = 96, hy.path)
-{
+  {
   # hours is the back trajectory time
   files <- Sys.glob("tdump*")
   output <- file('Rcombined.txt', 'w')
   for (i in files)
-  {
+    {
     input <- readLines(i)
     input <- input[-c(1:7)]
     writeLines(input, output)
-  }
+    }
   close(output)
   traj <- read.table(paste0(hy.path, "working/Rcombined.txt"), header = FALSE)
   traj <- subset(traj, select = -c(V2, V7, V8))
@@ -106,15 +106,15 @@ read.files <- function(hours = 96, hy.path)
                                        tz = "GMT"))
   traj$date <- traj$date2 - 3600 * traj$hour.inc
   traj
-}
+  }
 
 add.met <- function(month, Year, met, bat.file)
-{
-  if (month == 0)
   {
+  if (month == 0)
+    {
     month <- 12
     Year <- as.numeric(Year) - 1
-  }
+    }
   if (month < 10) month <- paste("0", month, sep = "")
   write.table(paste("echo", met, " >>CONTROL"),
               bat.file,
@@ -129,7 +129,7 @@ add.met <- function(month, Year, met, bat.file)
               row.names = FALSE, 
               quote = FALSE, 
               append = TRUE)
-}
+  }
 
 procTraj <- function(lat = 21.221,
                      lon = 105.807,
@@ -140,7 +140,7 @@ procTraj <- function(lat = 21.221,
                      hours = 96,
                      height = 12,
                      hy.path = "C:/hysplit4/")
-{
+  {
   # hours is the back trajectory time e.g. 96 = 4-day back trajectory
   # height is start height (m)
   # year is period
@@ -155,7 +155,7 @@ procTraj <- function(lat = 21.221,
   end <- paste(year, "-12-31 18:00", sep = "")
   dates <- seq(as.POSIXct(start, "GMT"), as.POSIXct(end, "GMT"), by = "3 hour")
   for (i in 1:length(dates))
-  {
+    {
     year <- format(dates[i], "%y")
     Year <- format(dates[i], "%Y")
     month <- format(dates[i], "%m")
@@ -196,18 +196,18 @@ procTraj <- function(lat = 21.221,
                 row.names = FALSE, quote = FALSE, append = TRUE)
     ## run the file
     system(paste0(hy.path, 'working/test.bat'))
-  }
+    }
   traj <- read.files(hours, hy.path)
   file.name <- paste(out, name, Year, ".RData", sep = "")
   save(traj, file = file.name)
-}
+  }
 
 # Download meteorological file
 getMet(year = 2016:2020, month = 1:12)
 
 # Run model Hysplit
 for (i in 2016:2020)
-{
+  {
   procTraj(lat = 21.221,
            lon = 105.807,
            year = i,
@@ -216,7 +216,7 @@ for (i in 2016:2020)
            met = "D:/GitHub/hanair/TrajData/",
            out = "D:/GitHub/hanair/TrajProc/",
            hy.path = "C:/hysplit4/")
-}
+  }
 
 # Import data
 traj_hn <- importTraj(site = "hanoi", year = 2016:2020, local = "D:/GitHub/hanair/TrajProc/")
